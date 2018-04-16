@@ -1,21 +1,47 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { Toast } from 'antd-mobile';
 import { Map } from 'immutable';
 import moment from 'moment';
 import { connect } from 'react-redux';
 import uuidv4 from 'uuid';
 import PropTypes from 'prop-types';
-import ImmutablePropTypes from 'react-immutable-proptypes';
+import gql from 'graphql-tag';
+import { graphql, compose } from 'react-apollo';
 import OperationTrigger from './operationTrigger';
 
+const academyPieceDetailInfo = gql`
+    query academyPieceDetailInfo($order: Int!, $token: String!) {
+        academyPieceDetailInfo(order: $order, token: $token) {
+            text
+            share
+            like
+            likeClick
+            comment
+            revise
+            notes
+        }
+    }
+`;
+
+const academyLike = gql`
+    mutation academyLike($token: String!, $order: Int!, $commentId: String!) {
+        academyLike(token: $token, order: $order, commentId: $commentId) {
+            finish
+        }
+    }
+`;
+
 const { width } = Dimensions.get('window');
-const OperationPanel = ({ likeId, imageSource, order, operation, text, sharePress, commentPress, likePress, operationPress }) => {
-    const commentNumber = operation.getIn(['comment', 'content']).reduce((sum, value) => (sum + 1 + value.get('recomment').size), 0);
+const OperationPanel = ({ token, data, academyLike, likeId, imageSource, order, sharePress, commentPress, likePress, operationPress }) => {
+    if (data.loading) {
+        return (<View><Text>loading...</Text></View>);
+    }
     return (
         <View style={styles.operation}>
             <OperationTrigger
               imageSource={require('../../../Image/Operation/share.png')}
-              number={operation.getIn(['share', 'number']).toString()}
+              number={data.academyPieceDetailInfo.share.toString()}
               press={sharePress({
                   sourceDetail: Map({
                     text: '',
@@ -28,7 +54,7 @@ const OperationPanel = ({ likeId, imageSource, order, operation, text, sharePres
             />
             <OperationTrigger
               imageSource={require('../../../Image/Operation/comment.png')}
-              number={commentNumber.toString()}
+              number={data.academyPieceDetailInfo.comment.toString()}
               press={commentPress({
                   location: Map({
                     viewMode: 'main',
@@ -40,23 +66,23 @@ const OperationPanel = ({ likeId, imageSource, order, operation, text, sharePres
             />
             <OperationTrigger
               imageSource={imageSource}
-              number={operation.getIn(['like', 'number']).toString()}
+              number={data.academyPieceDetailInfo.like.toString()}
               likeId={likeId}
               press={likePress({
+                academyLike,
+                order,
+                token,
                 likeId,
-                location: Map({
-                    viewMode: 'like',
-                }),
               })}
             />
             <OperationTrigger
               imageSource={require('../../../Image/Operation/revise.png')}
-              have={operation.get('revise') !== text}
+              have={data.academyPieceDetailInfo.revise}
               press={operationPress({ viewMode: 'revise' })}
             />
             <OperationTrigger
               imageSource={require('../../../Image/Operation/notes.png')}
-              have={operation.getIn(['notes', 'text']).length !== 0}
+              have={data.academyPieceDetailInfo.notes}
               press={operationPress({ viewMode: 'notes' })}
             />
         </View>
@@ -66,13 +92,13 @@ const OperationPanel = ({ likeId, imageSource, order, operation, text, sharePres
 OperationPanel.propTypes = {
     likeId: PropTypes.string.isRequired,
     imageSource: PropTypes.number.isRequired,
-    operation: ImmutablePropTypes.map.isRequired,
-    order: PropTypes.string.isRequired,
-    text: PropTypes.string.isRequired,
+    order: PropTypes.number.isRequired,
     sharePress: PropTypes.func.isRequired,
     commentPress: PropTypes.func.isRequired,
     likePress: PropTypes.func.isRequired,
     operationPress: PropTypes.func.isRequired,
+    data: PropTypes.object.isRequired,
+    token: PropTypes.string.isRequired,
 };
 
 let styles = StyleSheet.create({
@@ -89,9 +115,10 @@ let styles = StyleSheet.create({
 
 const mapStateToProps = (state, ownProps) => ({
     likeId: uuidv4(),
-    operation: state.getIn(['academy', 'content', ownProps.order, 'operation']),
-    imageSource: state.getIn(['academy', 'content', ownProps.order, 'operation', 'like', 'clicked']) ? require('../../../Image/Operation/likeAfter.png') : require('../../../Image/Operation/like.png'),
-    text: state.getIn(['academy', 'content', ownProps.order, 'text']),
+    operation: state.getIn(['academy', 'content', ownProps.order.toString(), 'operation']),
+    imageSource: state.getIn(['academy', 'content', ownProps.order.toString(), 'operation', 'like', 'clicked']) ? require('../../../Image/Operation/likeAfter.png') : require('../../../Image/Operation/like.png'),
+    text: state.getIn(['academy', 'content', ownProps.order.toString(), 'text']),
+    token: state.getIn(['me', '我的信息', 'token']),
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -116,18 +143,24 @@ const mapDispatchToProps = dispatch => ({
             type: 'OPERATION_COMMENT_PRESS',
             location,
         }),
-    likePress: ({ location, likeId }) => () => {
+    likePress: ({ academyLike, token, likeId, order }) => async () => {
         this[likeId].swing(800);
-        dispatch({
-            type: 'OPERATION_LIKE_PRESS',
-            location,
-        });
-        dispatch({
-            type: 'ME_ADD',
-            viewMode: '我的点赞',
-            location,
-        });
+        const response = await academyLike({ variables: { token, order, commentId: '' } });
+        if (response.data.academyLike.finish) {
+            Toast.success('点赞成功!');
+        } else {
+            Toast.fail('点赞失败，请检查网络！');
+        }
     },
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(OperationPanel);
+const queryOptions = {
+    options: props => ({
+        variables: {
+            order: Number.parseInt(props.order, 10),
+            token: '',
+        },
+    }),
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(compose(graphql(academyPieceDetailInfo, queryOptions), graphql(academyLike, { name: 'academyLike' }))(OperationPanel));

@@ -8,7 +8,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import DrawerMainPage from './DrawerPage/drawerMainPage';
 import PersonalInformation from './PersonalInformation/personalInformation';
-import ChangePassward from './PersonalInformation/changePassward';
+import ChangePassword from './PersonalInformation/changePassword';
 import generateColor from '../../../Action/generateColor';
 
 const { width, height } = Dimensions.get('window');
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
 const mapStateToProps = (state) => {
     const componentMap = {
         我的信息: PersonalInformation,
-        修改密码: ChangePassward,
+        修改密码: ChangePassword,
     };
     const viewMode = state.getIn(['me', 'viewMode']);
     return {

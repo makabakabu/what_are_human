@@ -4,25 +4,42 @@ import {
     View,
     Dimensions,
     FlatList,
+    Text,
   } from 'react-native';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import ImmutablePropTypes from 'react-immutable-proptypes';
+import gql from 'graphql-tag';
+import { graphql } from 'react-apollo';
 import Piece from './piece';
 import generateColor from '../../../Action/generateColor';
 
+const academyPieceBriefInfo = gql`
+    query academyPieceBriefInfo {
+        academyPieceBriefInfo {
+            order,
+            title,
+        }
+    }
+`;
+
 const { width, height } = Dimensions.get('window');
-const Main = ({ content, light }) => (
-    <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]} >
-        <FlatList
-          data={content.map((value, key) => ({ key, title: value.get('text').substring(0, 12) })).valueSeq().toArray()}
-          renderItem={({ item }) => <Piece key={item.key} order={item.key} title={item.title} />}
-        />
-    </View>
-);
+const Main = ({ data, light }) => {
+    if (data.loading) {
+        return (<View><Text>loading...</Text></View>);
+    }
+    console.log(data);
+    return (
+        <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]} >
+            <FlatList
+              data={data.academyPieceBriefInfo.map(value => ({ key: value.order, title: value.title }))}
+              renderItem={({ item }) => <Piece key={item.key} order={item.key} title={item.title} />}
+            />
+        </View>
+    );
+};
 
 Main.propTypes = {
-    content: ImmutablePropTypes.map.isRequired,
+    data: PropTypes.object.isRequired,
     light: PropTypes.number.isRequired,
 };
 
@@ -37,8 +54,7 @@ let styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-    content: state.getIn(['academy', 'content']),
     light: state.getIn(['pageSet', 'light']),
 });
 
-export default connect(mapStateToProps)(Main);
+export default connect(mapStateToProps)(graphql(academyPieceBriefInfo)(Main));

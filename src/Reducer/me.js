@@ -132,22 +132,22 @@ const me = (state = {}, action) => {
         case 'ME_LOG_OFF':
             state = state.setIn(['me', '我的信息', 'gender'], '');
             state = state.setIn(['me', '我的信息', 'userName'], '');
-            state = state.setIn(['me', '我的信息', 'passward'], '');
+            state = state.setIn(['me', '我的信息', 'password'], '');
             state = state.set('viewMode', 'menu');
             state = state.setIn(['menu', 'backTo'], 'me');
             state = state.setIn(['menu', 'title'], '登陆');
             return state.setIn(['menu', 'viewMode'], 'signIn');
 
-        case 'PASSWARD':
+        case 'PASSWORD':
             return state.setIn(['me', '修改密码', action.kind], action.text);
 
-        case 'CHANGE_PASSWARD_SUCCESS':
+        case 'CHANGE_PASSWORD_SUCCESS':
             if (action.kind === 'success') {
-                state = state.setIn(['me', '我的信息', 'passward'], state.getIn(['me', '修改密码', 'passward']));
+                state = state.setIn(['me', '我的信息', 'password'], state.getIn(['me', '修改密码', 'password']));
             }
-            state = state.setIn(['me', '修改密码', 'oriPassward'], '');
-            state = state.setIn(['me', '修改密码', 'passward'], '');
-            state = state.setIn(['me', '修改密码', 'passwardRepeat'], '');
+            state = state.setIn(['me', '修改密码', 'oriPassword'], '');
+            state = state.setIn(['me', '修改密码', 'password'], '');
+            state = state.setIn(['me', '修改密码', 'passwordRepeat'], '');
             return state;
 
         case 'ME_REGISTER': {
@@ -155,11 +155,21 @@ const me = (state = {}, action) => {
             state = state.set('viewMode', 'me');
             state = state.setIn(['me', 'viewMode'], '我的信息');
             state = state.setIn(['me', '我的信息', 'gender'], register.get('gender'));
-            state = state.setIn(['me', '我的信息', 'name'], register.get('name'));
-            state = state.setIn(['me', '我的信息', 'passward'], register.get('passward'));
-            console.log(register);
+            state = state.setIn(['me', '我的信息', 'userName'], register.get('name'));
+            state = state.setIn(['me', '我的信息', 'password'], register.get('password'));
             return state;
         }
+
+        case 'ME_SIGNIN':
+            state = state.set('viewMode', 'me');
+            state = state.setIn(['me', 'viewMode'], '我的信息');
+            state = state.setIn(['me', '我的信息', 'gender'], action.gender);
+            state = state.setIn(['me', '我的信息', 'userName'], action.userName);
+            state = state.setIn(['me', '我的信息', 'token'], action.token);
+            state = state.setIn(['me', '我的信息', 'phoneNumber'], action.phoneNumber);
+            state = state.setIn(['me', '我的信息', 'quantum'], action.quantum);
+            state = state.setIn(['me', '我的信息', 'start'], action.start);
+            return state;
 
         default:
             return state;

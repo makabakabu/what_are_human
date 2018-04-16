@@ -3,32 +3,25 @@ import randomString from 'random-string';
 
 const initState = Map({
     viewMode: 'academy',
-    test: Map({
-        userName: '',
-    }),
-    openTime: Map({
-        date: 'asdfa',
-        start: 'asf',
-        end: '',
-    }),
     menu: Map({
-        viewMode: '',
+        viewMode: 'signIn',
         visibility: false,
         title: '',
         backTo: '',
         signIn: Map({
-            phoneNumber: '',
-            passward: '',
+            phoneNumber: '12692307692',
+            password: 'bengongbu',
             typedVertificationCode: '',
             vertificationCode: randomString({ length: 4 }),
         }),
         register: Map({
             userName: '',
             phoneNumber: '',
-            passward: '',
-            gender: 'male', // true表示女性， false表示女性
+            password: '',
+            rePassword: '',
+            gender: '', // true表示女性， false表示女性
             vertificationCode: '',
-            checkbox: false,
+            checkbox: true,
         }),
     }),
     share: Map({
@@ -1000,18 +993,17 @@ const initState = Map({
             }),
         }),
         我的信息: OrderedMap({
-            phoneNumber: 1212332,
-            userName: 'asdfedd',
+            phoneNumber: 23,
+            userName: '',
             gender: 'female',
-            passward: 'asdf',
             quantum: 'asdfas',
             start: 'asfdaf',
-            end: 'asfda',
+            token: '',
         }),
         修改密码: OrderedMap({
-            oriPassward: '',
-            passward: '',
-            passwardRepeat: '',
+            oriPassword: '',
+            password: '',
+            passwordRepeat: '',
         }),
     }),
     pageSet: Map({

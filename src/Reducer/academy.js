@@ -66,8 +66,8 @@ const academy = (state = {}, action) => {
 
         case 'ACADEMY_PIECE_2_SECTION':
             state = state.set('viewMode', 'section');
-            state = state.set('order', action.order);
-            return state.setIn(['content', action.order, 'viewMode'], 'main');
+            state = state.set('order', action.order.toString());
+            return state.setIn(['content', action.order.toString(), 'viewMode'], 'main');
 
         case 'ACADEMY_COMMENT_COMFIRM': {
             const location = state.getIn(['content', order, 'operation', 'comment', 'location']);

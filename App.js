@@ -12,7 +12,7 @@ import initState from './initState';
 import WhatAreHuman from './whatAreHuman';
 
 const link = createHttpLink({
-  uri: 'http://127.0.0.1:4000/graphql/',
+  uri: 'http://127.0.0.1:5000/whatAreHuman/',
   credentials: 'same-origin',
 });
 
@@ -20,8 +20,6 @@ const client = new ApolloClient({
   link,
   cache: new InMemoryCache(),
 });
-
-// const data = client.query({ query });
 
 const loggerMiddleware = createLogger({ predicate: () => __DEV__ });
 
@@ -33,7 +31,7 @@ const store = createStore(
 
 const App = () => (
     <Provider store={store}>
-        <ApolloProvider client={client} >
+        <ApolloProvider client={client}>
             <WhatAreHuman />
         </ApolloProvider>
     </Provider>

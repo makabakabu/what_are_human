@@ -8,25 +8,48 @@ import {
   } from 'react-native';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import gql from 'graphql-tag';
+import { graphql } from 'react-apollo';
 import OperationPanel from '../../../Component/Content/OperationPanel/operationPanel';
 import generateColor from '../../../Action/generateColor';
 import generateSize from '../../../Action/generateSize';
 
+const academyPieceDetailInfo = gql`
+    query academyPieceDetailInfo ($order: Int!, $token: String!) {
+        academyPieceDetailInfo (order: $order, token: $token) {
+            text
+            share
+            like
+            likeClick
+            comment
+            revise
+            notes
+        }
+    }
+`;
+
 const { height, width } = Dimensions.get('window');
-const Main = ({ text, order, light, fontSize }) => (
-    <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]} >
-        <ScrollView showsVerticalScrollIndicator={false} scrollEnabled >
-            <Text style={[styles.text, { fontSize: generateSize(fontSize, 20), color: `#${generateColor(166, 216, light)}` }]}>
-                { text }
-            </Text>
-            <OperationPanel order={order} />
-        </ScrollView>
-    </View>
-);
+const Main = ({ data, order, light, fontSize }) => {
+    console.log(order, data);
+    if (data.loading) {
+        return (<View><Text>loading...</Text></View>);
+    }
+    console.log(data);
+    return (
+        <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]} >
+            <ScrollView showsVerticalScrollIndicator={false} scrollEnabled >
+                <Text style={[styles.text, { fontSize: generateSize(fontSize, 20), color: `#${generateColor(166, 216, light)}` }]}>
+                    { data.academyPieceDetailInfo.text }
+                </Text>
+                <OperationPanel order={order} />
+            </ScrollView>
+        </View>
+    );
+};
 
 Main.propTypes = {
-    text: PropTypes.string.isRequired,
-    order: PropTypes.string.isRequired,
+    data: PropTypes.object.isRequired,
+    order: PropTypes.number.isRequired,
     light: PropTypes.number.isRequired,
     fontSize: PropTypes.string.isRequired,
 };
@@ -48,10 +71,18 @@ let styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-    text: state.getIn(['academy', 'content', state.getIn(['academy', 'order']), 'text']),
     order: state.getIn(['academy', 'order']),
     light: state.getIn(['pageSet', 'light']),
     fontSize: state.getIn(['pageSet', 'fontSize']),
 });
 
-export default connect(mapStateToProps)(Main);
+const queryOptions = {
+    options: ({ order }) => ({
+        variables: {
+            order: Number.parseInt(order, 10),
+            token: '',
+        },
+    }),
+};
+
+export default connect(mapStateToProps)(graphql(academyPieceDetailInfo, queryOptions)(Main));

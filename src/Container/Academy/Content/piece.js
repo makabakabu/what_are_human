@@ -27,7 +27,7 @@ const Piece = ({ light, fontSize, order, title, press }) => (
 Piece.propTypes = {
     light: PropTypes.number.isRequired,
     fontSize: PropTypes.string.isRequired,
-    order: PropTypes.string.isRequired,
+    order: PropTypes.number.isRequired,
     title: PropTypes.string.isRequired,
     press: PropTypes.func.isRequired,
 };

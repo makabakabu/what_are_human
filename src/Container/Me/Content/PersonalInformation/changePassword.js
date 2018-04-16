@@ -16,15 +16,15 @@ import PropTypes from 'prop-types';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 
 const { height, width } = Dimensions.get('window');
-const ChangePassward = ({ passward, changePassward, comfirm }) => (
+const ChangePassword = ({ password, changePassword, comfirm }) => (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.main}>
             <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={64}>
                 <View style={{ width, alignItems: 'center', marginTop: height * 0.05 }}>
-                    <TextInput value={passward.get('oriPassward')} placeholder="原密码" onChangeText={text => changePassward({ text, kind: 'oriPassward' })} style={[styles.text, { marginTop: height * 0.05 }]} />
-                    <TextInput value={passward.get('passward')} placeholder="新密码" onChangeText={text => changePassward({ text, kind: 'passward' })} secureTextEntry style={styles.text} />
-                    <TextInput value={passward.get('passwardRepeat')} placeholder="重复密码" onChangeText={text => changePassward({ text, kind: 'passwardRepeat' })} secureTextEntry style={styles.text} />
-                    <TouchableOpacity onPress={comfirm({ passward })}>
+                    <TextInput value={password.get('oriPassword')} placeholder="原密码" onChangeText={text => changePassword({ text, kind: 'oriPassword' })} style={[styles.text, { marginTop: height * 0.05 }]} />
+                    <TextInput value={password.get('password')} placeholder="新密码" onChangeText={text => changePassword({ text, kind: 'password' })} secureTextEntry style={styles.text} />
+                    <TextInput value={password.get('passwordRepeat')} placeholder="重复密码" onChangeText={text => changePassword({ text, kind: 'passwordRepeat' })} secureTextEntry style={styles.text} />
+                    <TouchableOpacity onPress={comfirm({ password })}>
                         <View style={styles.button}>
                             <Text style={{ color: 'white', fontSize: 20 }}>
                                 确定
@@ -37,9 +37,9 @@ const ChangePassward = ({ passward, changePassward, comfirm }) => (
     </TouchableWithoutFeedback>
 );
 
-ChangePassward.propTypes = {
-    passward: ImmutablePropTypes.map.isRequired,
-    changePassward: PropTypes.func.isRequired,
+ChangePassword.propTypes = {
+    password: ImmutablePropTypes.map.isRequired,
+    changePassword: PropTypes.func.isRequired,
     comfirm: PropTypes.func.isRequired,
 };
 
@@ -72,32 +72,32 @@ let styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-    passward: state.getIn(['me', '修改密码']),
+    password: state.getIn(['me', '修改密码']),
 });
 
 const mapDispatchToProps = dispatch => ({
-    changePassward: ({ text, kind }) => {
+    changePassword: ({ text, kind }) => {
         dispatch({
-            type: 'PASSWARD',
+            type: 'PASSWORD',
             kind,
             text,
         });
     },
-    comfirm: ({ passward }) => () => {
-        if (passward.get('passward') === passward.get('passwardRepeat')) {
+    comfirm: ({ password }) => () => {
+        if (password.get('password') === password.get('passwordRepeat')) {
             Alert.alert('修改成功');
             dispatch({
-                type: 'CHANGE_PASSWARD_COMFIRM',
+                type: 'CHANGE_PASSWORD_COMFIRM',
                 kind: 'success',
             });
         } else {
             Alert.alert('修改失败');
             dispatch({
-                type: 'CHANGE_PASSWARD_COMFIRM',
+                type: 'CHANGE_PASSWORD_COMFIRM',
                 kind: 'fail',
             });
         }
     },
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ChangePassward);
+export default connect(mapStateToProps, mapDispatchToProps)(ChangePassword);

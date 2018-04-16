@@ -11,43 +11,61 @@ import {
     KeyboardAvoidingView,
     Dimensions,
 } from 'react-native';
+import { Toast } from 'antd-mobile';
 import { connect } from 'react-redux';
 import ImmutablePropTypes from 'react-immutable-proptypes';
-import randomString from 'random-string';
 import PropTypes from 'prop-types';
+import gql from 'graphql-tag';
+import { graphql, compose } from 'react-apollo';
 import generateColor from '../../../Action/generateColor';
 import generateSize from '../../../Action/generateSize';
 
+const query = gql`
+    query {
+        allUser {
+            phoneNumber
+        }
+    }
+`;
+
+const signIn2server = gql`
+    mutation signIn2server ($phoneNumber: String!, $password: String!) {
+        signIn2server (phoneNumber: $phoneNumber, password: $password) {
+            token
+            phoneNumber
+            userName
+            quantum
+            gender
+            start
+        }
+    }
+`;
+
 const { height, width } = Dimensions.get('window');
-const SignIn = ({ light, fontSize, signIn, change, registerPress }) => {
-    styles.text = [styles.text, { color: `#${generateColor(50, 109, light)}`, fontSize: generateSize(fontSize, 20), backgroundColor: `#${generateColor(166, 216, light)}` }];
+const SignIn = ({ data, light, fontSize, signInInfo, signIn, signIn2server, change, registerPress }) => {
+    styles.text = [styles.text, { color: `#${generateColor(166, 216, light)}`, fontSize: generateSize(fontSize, 20), borderBottomColor: `#${generateColor(166, 216, light)}`, borderBottomWidth: 1 }];
+    if (data.loading) {
+        return (<View><Text>loading...</Text></View>)
+    }
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]}>
                 <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={64}>
                     <View style={{ width, alignItems: 'center' }}>
                         <Image style={[styles.logo, { marginTop: height * 0.05 }]} source={require('../../../Image/Logo.png')} />
-                        <TextInput placeholder="注册手机号" value={signIn.get('phoneNumber')} onChangeText={value => change({ value, viewMode: 'phoneNumber' })} keyboardType="numeric" maxLength={11} style={[styles.text, { marginTop: height * 0.05 }]} />
-                        <TextInput placeholder="密码" value={signIn.get('passward')} onChangeText={value => change({ value, viewMode: 'passward' })} secureTextEntry style={styles.text} />
-                        <TextInput placeholder="验证码" value={signIn.get('typedVertificationCode')} maxLength={4} onChangeText={value => change({ value, viewMode: 'typedVertificationCode' })} style={styles.text} />
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ height: 45, width: 0.34 * width, marginTop: 15, paddingLeft: 20, borderRadius: 7, justifyContent: 'center', backgroundColor: `#${generateColor(166, 216, light)}` }}>
-                                <Text style={{ fontSize: 32, color: `#${generateColor(50, 109, light)}` }}> { signIn.get('vertificationCode') } </Text>
-                            </View>
-                            <View style={{ width: 0.41 * width, height: 45, marginTop: 15, alignItems: 'center', justifyContent: 'center' }}>
-                                <Text onPress={() => change({ value: randomString({ length: 4 }), viewMode: 'vertificationCode' })} style={{ fontSize: 15, textAlign: 'right', color: 'white' }}>
-                                 看不清楚？ 换一张
-                                </Text>
-                            </View>
-                        </View>
-                        <TouchableOpacity >
+                        <TextInput placeholder="注册手机号" placeholderTextColor="#888" value={signInInfo.get('phoneNumber')} onChangeText={value => change({ value, viewMode: 'phoneNumber' })} keyboardType="numeric" maxLength={11} style={[styles.text, { marginTop: height * 0.05 }]} />
+                        <TextInput placeholder="密码" placeholderTextColor="#888" value={signInInfo.get('password')} onChangeText={value => change({ value, viewMode: 'password' })} secureTextEntry style={styles.text} />
+                        <TouchableOpacity onPress={signIn({ phoneNumber: signInInfo.get('phoneNumber'), password: signInInfo.get('password'), signIn2server })}>
                             <View style={styles.button}>
                                 <Text style={{ color: 'white', fontSize: 20 }}>
                                     登陆
                                 </Text>
                             </View>
                         </TouchableOpacity>
-                        <Text onPress={registerPress} style={{ textDecorationLine: 'underline', fontSize: 18, marginTop: 10, color: 'white' }}>注册微斯人账号</Text>
+                        <View style={{ width: 0.75 * width, flexDirection: 'row', justifyContent: 'space-between' }}>
+                            <Text onPress={registerPress} style={{ textDecorationLine: 'underline', fontSize: 18, marginTop: 10, color: 'white' }}>注册微斯人账号</Text>
+                            <Text onPress={registerPress} style={{ textDecorationLine: 'underline', fontSize: 18, marginTop: 10, color: 'white' }}>忘记密码</Text>
+                        </View>
                     </View>
                 </KeyboardAvoidingView>
             </View>
@@ -58,9 +76,12 @@ const SignIn = ({ light, fontSize, signIn, change, registerPress }) => {
 SignIn.propTypes = {
     light: PropTypes.number.isRequired,
     fontSize: PropTypes.string.isRequired,
-    signIn: ImmutablePropTypes.map.isRequired,
+    signInInfo: ImmutablePropTypes.map.isRequired,
     change: PropTypes.func.isRequired,
     registerPress: PropTypes.func.isRequired,
+    signIn: PropTypes.func.isRequired,
+    signIn2server: PropTypes.func.isRequired,
+    data: PropTypes.object.isRequired,
 };
 
 let styles = StyleSheet.create({
@@ -72,9 +93,8 @@ let styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: width * 0.12,
-        height: height * 0.05,
-        marginTop: '5%',
+        width: 95,
+        height: 68,
     },
     text: {
         height: 45,
@@ -82,8 +102,7 @@ let styles = StyleSheet.create({
         marginTop: 15,
         paddingLeft: 20,
         borderRadius: 7,
-        color: '#666',
-        backgroundColor: '#ededed',
+        backgroundColor: 'transparent',
     },
     button: {
         height: 45,
@@ -97,7 +116,7 @@ let styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-    signIn: state.getIn(['menu', 'signIn']),
+    signInInfo: state.getIn(['menu', 'signIn']),
     light: state.getIn(['pageSet', 'light']),
     fontSize: state.getIn(['pageSet', 'fontSize']),
 });
@@ -110,13 +129,24 @@ const mapDispatchToProps = dispatch => ({
             value,
         });
     },
-    // SignIn: ({ vertificationCode }) => {
-    //     if(store.getState().getIn(["menu", "signIn", "vertificationCode"]) === this.state.vertificationCode){
-    //         Alert.alert("登陆成功！")
-    //     }else{
-    //         Alert.alert("验证码错误！")
-    //     }
-    // }
+    signIn: ({ phoneNumber, password, signIn2server }) => async () => {
+        const response = await signIn2server({ variables: { phoneNumber, password } });
+        if (response) {
+            Toast.success('登陆成功！');
+            console.log(response);
+            dispatch({// 此处需要与服务器连接，接受数据
+                type: 'ME_SIGNIN',
+                userName: response.data.signIn2server.userName,
+                phoneNumber: response.data.signIn2server.phoneNumber,
+                token: response.data.signIn2server.token,
+                quantum: response.data.signIn2server.quantum,
+                gender: response.data.signIn2server.gender,
+                start: response.data.signIn2server.start,
+            });
+        } else {
+            Toast.fail('登陆失败!');
+        }
+    },
     registerPress: () => {
         dispatch({
             type: 'CHANGE_MENU_VIEWMODE',
@@ -125,4 +155,4 @@ const mapDispatchToProps = dispatch => ({
     },
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(SignIn);
+export default connect(mapStateToProps, mapDispatchToProps)(compose(graphql(query), graphql(signIn2server, { name: 'signIn2server' }))(SignIn));
