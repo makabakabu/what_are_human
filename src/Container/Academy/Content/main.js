@@ -27,7 +27,6 @@ const Main = ({ data, light }) => {
     if (data.loading) {
         return (<View><Text>loading...</Text></View>);
     }
-    console.log(data);
     return (
         <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]} >
             <FlatList

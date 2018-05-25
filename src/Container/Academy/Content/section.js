@@ -30,11 +30,9 @@ const academyPieceDetailInfo = gql`
 
 const { height, width } = Dimensions.get('window');
 const Main = ({ data, order, light, fontSize }) => {
-    console.log(order, data);
     if (data.loading) {
         return (<View><Text>loading...</Text></View>);
     }
-    console.log(data);
     return (
         <View style={[styles.main, { backgroundColor: `#${generateColor(50, 109, light)}` }]} >
             <ScrollView showsVerticalScrollIndicator={false} scrollEnabled >
@@ -71,7 +69,7 @@ let styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-    order: state.getIn(['academy', 'order']),
+    order: Number.parseInt(state.getIn(['academy', 'order']), 10),
     light: state.getIn(['pageSet', 'light']),
     fontSize: state.getIn(['pageSet', 'fontSize']),
 });
@@ -79,7 +77,7 @@ const mapStateToProps = state => ({
 const queryOptions = {
     options: ({ order }) => ({
         variables: {
-            order: Number.parseInt(order, 10),
+            order,
             token: '',
         },
     }),
